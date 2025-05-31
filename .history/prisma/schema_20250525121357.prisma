@@ -1,3 +1,9 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,6 +12,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 model User{
 
@@ -16,7 +23,7 @@ model User{
   clerkid String @unique
   studio Media?
   image String?
-  WorkSpace WorkSpace[]
+  workspace Workspace[]
   videos Video[]
   subscription Subscription?
   members Member[]
@@ -30,9 +37,9 @@ model User{
 }
 
 model Subscription{
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("get_random_uuid()")) @db.Uuid
   User User? @relation(fields: [userId], references: [id])
-  userId String? @unique @db.Uuid
+  userId String?
   plan SUBSCRIPTION_PLAN @default(FREE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,18 +49,19 @@ model Subscription{
 
 
 model Media{
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  id String @id @default(dbgenerated("get_random_uuid()")) @db.Uuid
   screen String?
   mic String?
   camera String?
   preset PRESET @default(LD)
-  User User? @relation(fields: [userId] , references: [id])
+  user User? @relation(fields: [userId] , references: [id])
   userId String? @unique @db.Uuid
 }
 
-model WorkSpace{
+model Workspace{
 
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("get_random_uuid()")) @db.Uuid
   type Type @default(PERSONAL)
   name String
   User User? @relation(fields: [userId], references: [id])
@@ -68,7 +76,7 @@ model WorkSpace{
 
 model Video{
 
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("get_random_uuid()")) @db.Uuid
   title String? @default("Untitled Video")
   description String? @default("No Description")
   source String @unique
@@ -78,55 +86,24 @@ model Video{
   User User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String? @db.Uuid
   processing Boolean @default(true)
-  WorkSpace WorkSpace? @relation(fields: [WorkSpaceId], references: [id], onDelete: Cascade)
-  WorkSpaceId String? @db.Uuid
+  Workspace Workspace? @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
+  workSpaceId String? @db.Uuid
   views Int @default(0)
   summary String?
 
 }
 model Folder{
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("get_random_uuid()")) @db.Uuid
   name String @default("Untitled Folder")
   createdAt DateTime @default(now())
-  WorkSpace WorkSpace? @relation(fields: [WorkSpaceId], references: [id])
-  WorkSpaceId String? @db.Uuid
-  videos Video[]
-}
-
-model Member{
-
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  User User? @relation(fields: [userId], references: [id])
-  userId String? @db.Uuid
-  createdAt DateTime @default(now())
-  member Boolean @default(true)
-  WorkSpace WorkSpace? @relation(fields: [WorkSpaceId], references: [id])
-  WorkSpaceId String? @db.Uuid
-}
-
-model Invite{
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sender User? @relation("sender", fields: [senderId], references: [id])
-  senderId String? @db.Uuid
-  receiver User? @relation("receiver", fields: [receiverId], references: [id])
-  receiverId String? @db.Uuid
-  content String
-  WorkSpace WorkSpace? @relation(fields: [workSpaceId], references: [id])
+  WorkSpace Workspace? @relation(fields: [workSpaceId], references: [id])
   workSpaceId String? @db.Uuid
-  accepted Boolean @default(false)
-}
-
-model Notification{
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  User User? @relation(fields: [userId], references: [id])
-  userId String? @db.Uuid
-  content String
-  createdAt DateTime @default(now())
+  videos Video[]
 }
 
 enum SUBSCRIPTION_PLAN{
   FREE
-  PRO
+  PAID
 }
 
 enum Type{
